@@ -1,0 +1,3 @@
+LIBRARY FilterASM
+EXPORTS
+MyProc1
