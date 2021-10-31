@@ -32,6 +32,11 @@ extern "C" {          // we need to export the C interface
         return a * b;
     }
 
+    __declspec(dllexport) int blurGauss(int height, int width)
+    {
+        return height * width;
+    }
+
 #ifdef __cplusplus
 }
 #endif

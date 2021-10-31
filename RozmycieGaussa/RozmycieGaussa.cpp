@@ -12,7 +12,7 @@
 
 #define MAX_LOADSTRING 100
 
-HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBoxCpp, frameForThreadNumber, threads2, threads4, threads8, threads16, threads32, threads64;
+HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBoxCpp, frameForThreadNumber, threads1, threads2, threads4, threads8, threads16, threads32, threads64;
 #define ID_PRZYCISK1 501
 #define ID_PRZYCISK2 502
 #define ID_PRZYCISK3 503
@@ -23,10 +23,11 @@ HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBox
 #define ID_PRZYCISK8 508
 #define ID_PRZYCISK9 509
 #define ID_PRZYCISK10 510
+#define ID_PRZYCISK11 511
 
 
-#define ID_BOX1 511
-#define ID_BOX2 512
+#define ID_BOX1 512
+#define ID_BOX2 513
 
 Image img;
 
@@ -70,34 +71,36 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     LoadStringW(hInstance, IDC_ROZMYCIEGAUSSA, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    /************************************************************************************************/
- // Call the MyProc1 assembler procedure from the JALib.dll library in static mode
-    int x = 3, y = 4, z = 0;
-    HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
-    LPFNDLLFUNC lpfnDllFunc1; // Function pointer
 
-    x = 3, y = 4, z = 0;
-    if (NULL != hDLL) {
-        lpfnDllFunc1 = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
-        if (NULL != lpfnDllFunc1) {
-            z = lpfnDllFunc1(x, y); // Call MyProc1 from the JALib.dll library dynamically
-        }
-    }
-    /***********************************************************************************************/
+ //   /************************************************************************************************/
+ //// Call the MyProc1 assembler procedure from the JALib.dll library in static mode
+ //   int x = 3, y = 4, z = 0;
+ //   HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
+ //   LPFNDLLFUNC lpfnDllFunc1; // Function pointer
 
-        /************************************************************************************************/
- // Call the multiply cpp function
-    HINSTANCE hDLL2 = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
-    LPFNDLLFUNC lpfnDllFunc2; // Function pointer
+ //   x = 3, y = 4, z = 0;
+ //   if (NULL != hDLL) {
+ //       lpfnDllFunc1 = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
+ //       if (NULL != lpfnDllFunc1) {
+ //           z = lpfnDllFunc1(x, y); // Call MyProc1 from the JALib.dll library dynamically
+ //       }
+ //   }
+ //   /***********************************************************************************************/
 
-    x = 3, y = 4, z = 0;
-    if (NULL != hDLL2) {
-        lpfnDllFunc2 = (LPFNDLLFUNC)GetProcAddress(hDLL2, "multiply");
-        if (NULL != lpfnDllFunc2) {
-            z = lpfnDllFunc2(x, y); // Call MyProc1 from the JALib.dll library dynamically
-        }
-    }
-    /***********************************************************************************************/
+ //       /************************************************************************************************/
+ //// Call the multiply cpp function
+ //   HINSTANCE hDLL2 = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
+ //   LPFNDLLFUNC lpfnDllFunc2; // Function pointer
+
+ //   x = 3, y = 4, z = 0;
+ //   if (NULL != hDLL2) {
+ //       lpfnDllFunc2 = (LPFNDLLFUNC)GetProcAddress(hDLL2, "multiply");
+ //       if (NULL != lpfnDllFunc2) {
+ //           z = lpfnDllFunc2(x, y); // Call MyProc1 from the JALib.dll library dynamically
+ //       }
+ //   }
+ //   /***********************************************************************************************/
+
 
     // Wykonaj inicjowanie aplikacji:
     if (!InitInstance (hInstance, nCmdShow))
@@ -169,40 +172,43 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
    loadImageButton = CreateWindowEx(0, L"BUTTON", L"Wybierz obraz do rozmycia", WS_CHILD | WS_VISIBLE,
-       1050, 105, 200, 40, hWnd, (HMENU)ID_PRZYCISK9, hInstance, NULL);
+       1100, 105, 200, 40, hWnd, (HMENU)ID_PRZYCISK10, hInstance, NULL);
 
    filterImageButton = CreateWindowEx(0, L"BUTTON", L"Rozmyj obraz", WS_CHILD | WS_VISIBLE,
-       1050, 155, 200, 40, hWnd, (HMENU)ID_PRZYCISK10, hInstance, NULL);
+       1100, 155, 200, 40, hWnd, (HMENU)ID_PRZYCISK11, hInstance, NULL);
 
    frameForLibraryOptions = CreateWindowEx(0, L"BUTTON", L"Biblioteka ktorej chcesz uzyc:", WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
        50, 100, 400, 100, hWnd, (HMENU)ID_BOX1, hInstance, NULL);
 
    frameForThreadNumber = CreateWindowEx(0, L"BUTTON", L"Ilosc watkow:", WS_CHILD | WS_VISIBLE | BS_GROUPBOX,
-       500, 100, 500, 100, hWnd, (HMENU)ID_BOX2, hInstance, NULL);
+       500, 100, 530, 100, hWnd, (HMENU)ID_BOX2, hInstance, NULL);
 
-   chBoxAsm = CreateWindowEx(0, L"BUTTON", L"Biblioteka asemblerowa", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
-       240, 150, 180, 10, hWnd, (HMENU)ID_PRZYCISK2, hInstance, NULL);
-
-   chBoxCpp = CreateWindowEx(0, L"BUTTON", L"Biblioteka C++", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+   chBoxCpp = CreateWindowEx(0, L"BUTTON", L"Biblioteka C++", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
        90, 150, 120, 10, hWnd, (HMENU)ID_PRZYCISK1, hInstance, NULL);
+
+   chBoxAsm = CreateWindowEx(0, L"BUTTON", L"Biblioteka asemblerowa", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+       240, 150, 180, 10, hWnd, (HMENU)ID_PRZYCISK2, hInstance, NULL);
    
-   threads2 = CreateWindowEx(0, L"BUTTON", L"2", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
+   threads1 = CreateWindowEx(0, L"BUTTON", L"1", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP,
        530, 150, 30, 10, hWnd, (HMENU)ID_PRZYCISK3, hInstance, NULL);
 
-   threads4 = CreateWindowEx(0, L"BUTTON", L"4", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
-       610, 150, 30, 10, hWnd, (HMENU)ID_PRZYCISK4, hInstance, NULL);
+   threads2 = CreateWindowEx(0, L"BUTTON", L"2", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+       600, 150, 30, 10, hWnd, (HMENU)ID_PRZYCISK4, hInstance, NULL);
 
-   threads8 = CreateWindowEx(0, L"BUTTON", L"8", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+   threads4 = CreateWindowEx(0, L"BUTTON", L"4", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
        670, 150, 30, 10, hWnd, (HMENU)ID_PRZYCISK5, hInstance, NULL);
 
+   threads8 = CreateWindowEx(0, L"BUTTON", L"8", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
+       740, 150, 30, 10, hWnd, (HMENU)ID_PRZYCISK6, hInstance, NULL);
+
    threads16 = CreateWindowEx(0, L"BUTTON", L"16", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
-       730, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK6, hInstance, NULL);
+       810, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK7, hInstance, NULL);
 
    threads32 = CreateWindowEx(0, L"BUTTON", L"32", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
-       830, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK7, hInstance, NULL);
+       880, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK8, hInstance, NULL);
 
    threads64 = CreateWindowEx(0, L"BUTTON", L"64", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
-       930, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK8, hInstance, NULL);
+       950, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK9, hInstance, NULL);
 
    if (!hWnd)
    {
@@ -236,35 +242,61 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Nasluchuj menu:
             switch (wParam)
             {
-                case ID_PRZYCISK10: 
+                case ID_PRZYCISK11: 
                 {
+                    if (IsDlgButtonChecked(hWnd, ID_PRZYCISK1))
+                    {
+                        MessageBox(hWnd, L"Wybrales biblioteke C++", L"Test", MB_ICONINFORMATION);
+                        HINSTANCE hDLL = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
+                        LPFNDLLFUNC lpfnDllFunc; // Function pointer
+                        int z = 0;
+                           if (NULL != hDLL) 
+                           {
+                               lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
+                               if (NULL != lpfnDllFunc) 
+                               {
+                                  z = lpfnDllFunc(1, 2); // Call MyProc1 from the JALib.dll library dynamically
+                               }
+                           }
+
+                    }
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK2))
+                    {
+                        MessageBox(hWnd, L"Wybrales biblioteke asemblerowa", L"Test", MB_ICONINFORMATION);
+                    }
+
                     int threadsNumber = 0;
                     if (IsDlgButtonChecked(hWnd, ID_PRZYCISK3))
+                    {
+                        MessageBox(hWnd, L"Wybrales 1 watki", L"Test", MB_ICONINFORMATION);
+                        threadsNumber = 1;
+                    }
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK4))
                     {
                         MessageBox(hWnd, L"Wybrales 2 watki", L"Test", MB_ICONINFORMATION);
                         threadsNumber = 2;
                     }
-                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK4))
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK5))
                     {
                         MessageBox(hWnd, L"Wybrales 4 watki", L"Test", MB_ICONINFORMATION);
                         threadsNumber = 4;
                     }
-                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK5))
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK6))
                     {
                         MessageBox(hWnd, L"Wybrales 8 watki", L"Test", MB_ICONINFORMATION);
                         threadsNumber = 8;
                     }
-                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK6))
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK7))
                     {
                         MessageBox(hWnd, L"Wybrales 16 watki", L"Test", MB_ICONINFORMATION);
                         threadsNumber = 16;
                     }
-                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK7))
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK8))
                     {
                         MessageBox(hWnd, L"Wybrales 32 watki", L"Test", MB_ICONINFORMATION);
                         threadsNumber = 32;
                     }
-                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK8))
+                    else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK9))
                     {
                         MessageBox(hWnd, L"Wybrales 64 watki", L"Test", MB_ICONINFORMATION);
                         threadsNumber = 64;
@@ -272,15 +304,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                     int numberOfRows = img.getHeight();
                     int rowsForThread = numberOfRows / threadsNumber;
-                    int r = numberOfRows % threadsNumber;
+                    int restOfRows = numberOfRows % threadsNumber;
                     std::vector<std::thread> threads(threadsNumber);
                     int actualRow = 0;
-                    for (int i = 0; i < threadsNumber; i++)
+                    /*for (int i = 0; i < threadsNumber; i++)
                     {
-                        if (r != 0)
+                        if (restOfRows != 0)
                         {
                             threads[i] = std::thread(&Image::filter, &img, actualRow, actualRow + rowsForThread + 1);
-                            r--;
+                            restOfRows--;
                             actualRow += rowsForThread + 1;
                         }
                         else
@@ -292,14 +324,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     for (int i = 0; i < threadsNumber; i++)
                     {
                         threads[i].join();
-                    }
+                    }*/
+
+
 
                     img.save();
 
                     break;
                 }
                 //Wczytaj bitmape
-                case ID_PRZYCISK9: 
+                case ID_PRZYCISK10: 
                 {
                     //if (IsDlgButtonChecked(hWnd, ID_PRZYCISK1))
                     
@@ -315,10 +349,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     open.nMaxFile = 256;
                     open.nFilterIndex = 1;
                     open.lpstrInitialDir = NULL;
-                    open.lpstrTitle = L"Wybierz obraz!\0";
+                    open.lpstrTitle = L"Wybierz obraz\0";
                     open.nMaxFileTitle = strlen("Select an image file\0");
                     open.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
 
+                    //Otiwera okno z wyborem pliku
                     if (GetOpenFileName(&open))
                     {
                         //MessageBox(hWnd, open.lpstrFile, L"Info", MB_ICONINFORMATION);
