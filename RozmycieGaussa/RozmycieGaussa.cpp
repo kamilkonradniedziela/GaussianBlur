@@ -37,7 +37,7 @@ Image img;
 HINSTANCE hInst;                                // bieżące wystąpienie
 WCHAR szTitle[MAX_LOADSTRING];                  // Tekst paska tytułu
 WCHAR szWindowClass[MAX_LOADSTRING];            // nazwa klasy okna głównego
-typedef HRESULT(CALLBACK* LPFNDLLFUNC)(UINT, UINT); // DLL function handler
+typedef HRESULT(CALLBACK* LPFNDLLFUNC)(std::vector<unsigned char> v, UINT, UINT, UINT); // DLL function handler
 
 // Przekaż dalej deklaracje funkcji dołączone w tym module kodu:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -244,18 +244,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 case ID_PRZYCISK11: 
                 {
+                    LPFNDLLFUNC lpfnDllFunc; // Function pointer
                     if (IsDlgButtonChecked(hWnd, ID_PRZYCISK1))
                     {
                         MessageBox(hWnd, L"Wybrales biblioteke C++", L"Test", MB_ICONINFORMATION);
                         HINSTANCE hDLL = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
-                        LPFNDLLFUNC lpfnDllFunc; // Function pointer
-                        int z = 0;
                            if (NULL != hDLL) 
                            {
-                               lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
+                               lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "guassian_blur2D");
                                if (NULL != lpfnDllFunc) 
                                {
-                                  z = lpfnDllFunc(1, 2); // Call MyProc1 from the JALib.dll library dynamically
+                                   //lpfnDllFunc(img.vectorForColors, img.widthOfImg, 1, 1); // Call MyProc1 from the JALib.dll library dynamically
                                }
                            }
 
@@ -307,27 +306,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     int restOfRows = numberOfRows % threadsNumber;
                     std::vector<std::thread> threads(threadsNumber);
                     int actualRow = 0;
-                    /*for (int i = 0; i < threadsNumber; i++)
+                    for (int i = 0; i < threadsNumber; i++)
                     {
+                        //Jezeli nie ma reszty wierszy przydzielaj po rowno do kazdego watku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
                         if (restOfRows != 0)
                         {
-                            threads[i] = std::thread(&Image::filter, &img, actualRow, actualRow + rowsForThread + 1);
+                            threads[i] = std::thread(&Image::guassian_blur2D, &img, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
                             restOfRows--;
                             actualRow += rowsForThread + 1;
                         }
                         else
                         {
-                            threads[i] = std::thread(&Image::filter, &img, actualRow, actualRow + rowsForThread);
+                            threads[i] = std::thread(&Image::guassian_blur2D, &img, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread);
                             actualRow += rowsForThread;
                         }
+                        //threads[i] = std::thread(lpfnDllFunc, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
                     }
                     for (int i = 0; i < threadsNumber; i++)
                     {
                         threads[i].join();
-                    }*/
+                    }
 
-
-
+                    //img.guassian_blur2D(img.vectorForColors, img.widthOfImg, img.heightOfImg);
                     img.save();
 
                     break;

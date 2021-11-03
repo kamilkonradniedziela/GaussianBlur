@@ -5,6 +5,7 @@
 #include "atlstr.h"
 #include "comutil.h"
 
+
 Image::Image()
 {
 }
@@ -14,21 +15,24 @@ void Image::setImagePath(wchar_t* n)
 	pathToTheImg = n;
 }
 
-void Image::filter(int start, int end)
+void Image::filter(std::vector<unsigned char>& result, int width, int startHeight, int endHeight)
 {
-	//HINSTANCE hDLL2 = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
-	//LPFNDLLFUNC lpfnDllFunc2; // Function pointer
+	typedef HRESULT(CALLBACK* LPFNDLLFUNC)(std::vector<unsigned char> v, UINT, UINT, UINT); // DLL function handler
+	LPFNDLLFUNC lpfnDllFunc; // Function pointer
+	HINSTANCE hDLL = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
+	if (NULL != hDLL)
+	{
+		lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "guassian_blur2D");
+		if (NULL != lpfnDllFunc)
+		{
+			lpfnDllFunc(result, width, startHeight, endHeight); // Call MyProc1 from the JALib.dll library dynamically
+		}
+	}
+}
 
-	//x = 3, y = 4, z = 0;
-	//if (NULL != hDLL2) {
-	//	lpfnDllFunc2 = (LPFNDLLFUNC)GetProcAddress(hDLL2, "multiply");
-	//	if (NULL != lpfnDllFunc2) {
-	//		z = lpfnDllFunc2(x, y); // Call MyProc1 from the JALib.dll library dynamically
-	//	}
-	//}
-	//TODO
-
-
+std::vector<unsigned char> Image::getVectorForColors()
+{
+	return vectorForColors;
 }
 
 Image::~Image()
@@ -73,6 +77,7 @@ void Image::read()
 	int indeks = 0;
 	for (int y = 0; y < heightOfImg; y++)
 	{
+		//Do koloru wczytywane trzy bajty
 		for (int x = 0; x < widthOfImg; x++)
 		{
 			unsigned char color[3];

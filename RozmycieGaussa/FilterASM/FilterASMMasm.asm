@@ -26,4 +26,4 @@ MyProc1 proc x: DWORD, y: DWORD
  neg y
  ret ; return z in EAX register
 MyProc1 endp
-end ; End of ASM file
+end ; End of ASM file
