@@ -17,17 +17,7 @@ void Image::setImagePath(wchar_t* n)
 
 void Image::filter(std::vector<unsigned char>& result, int width, int startHeight, int endHeight)
 {
-	typedef HRESULT(CALLBACK* LPFNDLLFUNC)(std::vector<unsigned char> v, UINT, UINT, UINT); // DLL function handler
-	LPFNDLLFUNC lpfnDllFunc; // Function pointer
-	HINSTANCE hDLL = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
-	if (NULL != hDLL)
-	{
-		lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "guassian_blur2D");
-		if (NULL != lpfnDllFunc)
-		{
-			lpfnDllFunc(result, width, startHeight, endHeight); // Call MyProc1 from the JALib.dll library dynamically
-		}
-	}
+
 }
 
 std::vector<unsigned char> Image::getVectorForColors()

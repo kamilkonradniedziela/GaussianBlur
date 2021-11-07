@@ -9,10 +9,11 @@
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <chrono>
+
 
 #define MAX_LOADSTRING 100
 
-HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBoxCpp, frameForThreadNumber, threads1, threads2, threads4, threads8, threads16, threads32, threads64;
 #define ID_PRZYCISK1 501
 #define ID_PRZYCISK2 502
 #define ID_PRZYCISK3 503
@@ -25,19 +26,23 @@ HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBox
 #define ID_PRZYCISK10 510
 #define ID_PRZYCISK11 511
 
-
 #define ID_BOX1 512
 #define ID_BOX2 513
 
+
+// Namespace odpowiedzialny za operacje na czasie
+using namespace std::literals::chrono_literals;
+
+
 Image img;
 
-
+HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBoxCpp, frameForThreadNumber, threads1, threads2, threads4, threads8, threads16, threads32, threads64;
 
 // Zmienne globalne:
 HINSTANCE hInst;                                // bieżące wystąpienie
 WCHAR szTitle[MAX_LOADSTRING];                  // Tekst paska tytułu
 WCHAR szWindowClass[MAX_LOADSTRING];            // nazwa klasy okna głównego
-typedef HRESULT(CALLBACK* LPFNDLLFUNC)(std::vector<unsigned char> v, UINT, UINT, UINT); // DLL function handler
+typedef HRESULT(CALLBACK* LPFNDLLFUNC)(std::vector<unsigned char>& v, UINT, UINT, UINT); // DLL function handler
 
 // Przekaż dalej deklaracje funkcji dołączone w tym module kodu:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -49,9 +54,9 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 
 
-typedef int(__cdecl* MYPROC)(int, int);
+//typedef int(__cdecl* filterAsm)(int, int, int, int); // DDL'ka asemblerowa tymczasowa
 
-//Scieżka do pliku
+// Scieżka do pliku
 wchar_t frname[100]; 
 
 
@@ -72,20 +77,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
 
- //   /************************************************************************************************/
- //// Call the MyProc1 assembler procedure from the JALib.dll library in static mode
- //   int x = 3, y = 4, z = 0;
- //   HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
- //   LPFNDLLFUNC lpfnDllFunc1; // Function pointer
+    /************************************************************************************************/
+ // Call the MyProc1 assembler procedure from the JALib.dll library in static mode
+    int x = 3, y = 4, z = 0, k = 0, e = 0;
+    HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
+    LPFNDLLFUNC lpfnDllFunc1; // Function pointer
 
- //   x = 3, y = 4, z = 0;
- //   if (NULL != hDLL) {
- //       lpfnDllFunc1 = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
- //       if (NULL != lpfnDllFunc1) {
- //           z = lpfnDllFunc1(x, y); // Call MyProc1 from the JALib.dll library dynamically
- //       }
- //   }
- //   /***********************************************************************************************/
+    x = 3, y = 4, z = 0, k = 6, e = 10;
+    if (NULL != hDLL) {
+        lpfnDllFunc1 = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
+        if (NULL != lpfnDllFunc1) {
+            z = lpfnDllFunc1(img.vectorForColors, y, k, e); // Call MyProc1 from the JALib.dll library dynamically
+        }
+    }
+    /***********************************************************************************************/
 
  //       /************************************************************************************************/
  //// Call the multiply cpp function
@@ -238,7 +243,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         case WM_COMMAND:
         {
-
             // Nasluchuj menu:
             switch (wParam)
             {
@@ -251,17 +255,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         HINSTANCE hDLL = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
                            if (NULL != hDLL) 
                            {
-                               lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "guassian_blur2D");
-                               if (NULL != lpfnDllFunc) 
+                               lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
+                               if (lpfnDllFunc == NULL) 
                                {
-                                   //lpfnDllFunc(img.vectorForColors, img.widthOfImg, 1, 1); // Call MyProc1 from the JALib.dll library dynamically
+                                   MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
                                }
                            }
-
                     }
                     else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK2))
                     {
                         MessageBox(hWnd, L"Wybrales biblioteke asemblerowa", L"Test", MB_ICONINFORMATION);
+                        HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
+                        if (NULL != hDLL) 
+                        {
+                            int z = 0;
+                            lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
+                            if (NULL != lpfnDllFunc) 
+                            {
+                                z = lpfnDllFunc(img.vectorForColors, img.widthOfImg, 1, 1); // Call MyProc1 from the JALib.dll library dynamically
+                            }
+                        }
                     }
 
                     int threadsNumber = 0;
@@ -305,29 +318,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     int rowsForThread = numberOfRows / threadsNumber;
                     int restOfRows = numberOfRows % threadsNumber;
                     std::vector<std::thread> threads(threadsNumber);
-                    int actualRow = 0;
+                    int actualRow = 0;  
+                    auto start = std::chrono::high_resolution_clock::now();
                     for (int i = 0; i < threadsNumber; i++)
                     {
-                        //Jezeli nie ma reszty wierszy przydzielaj po rowno do kazdego watku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
+                        //Jeżeli nie ma reszty wierszy przydzielaj po równo do każdego wątku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
                         if (restOfRows != 0)
                         {
-                            threads[i] = std::thread(&Image::guassian_blur2D, &img, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
+                            threads[i] = std::thread(lpfnDllFunc, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
                             restOfRows--;
                             actualRow += rowsForThread + 1;
                         }
                         else
                         {
-                            threads[i] = std::thread(&Image::guassian_blur2D, &img, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread);
+                            threads[i] = std::thread(lpfnDllFunc, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread);
                             actualRow += rowsForThread;
                         }
-                        //threads[i] = std::thread(lpfnDllFunc, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
                     }
                     for (int i = 0; i < threadsNumber; i++)
                     {
                         threads[i].join();
                     }
+                    auto end = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<float>duration = end - start;
+                    float timeDifference = duration.count();
+                    std::string timeResult = "Czas filtrowania to: " + std::to_string(timeDifference) + " sekund";
+                    MessageBoxA(hWnd, timeResult.c_str(), "Komunikat", MB_ICONINFORMATION);
 
-                    //img.guassian_blur2D(img.vectorForColors, img.widthOfImg, img.heightOfImg);
                     img.save();
 
                     break;

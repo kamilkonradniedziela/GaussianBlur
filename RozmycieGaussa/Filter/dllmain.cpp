@@ -18,10 +18,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
-//int sum(int a, int b) {
-//    return a + b;
-//}
-
 #define EOF (-1)
 
 #ifdef __cplusplus    // If used by C++ code, 
@@ -33,29 +29,16 @@ extern "C" {          // we need to export the C interface
         return a * b;
     }
 
-    __declspec(dllexport) int blurGauss(int height, int width, std::vector<unsigned char> &v)
-    {
-        int index = 0;
-        for (int i = 0; i < height; i++)
-        {
-            for (int j = 0; j < width; j++)
-            {
-                v[index++] * 1;;
-                v[index++] * 2;;
-                v[index++] * 3;;
-            }
-        }
-        return index;
-    }
+    // Maska wykorzystywana do flltracji metodą Gaussa
+    int mask[3][3] = { 1, 2, 1,
+                         2, 4, 2,
+                         1, 2, 1 };
 
-    __declspec(dllexport) int kernel[3][3] = { 1, 2, 1,
-               2, 4, 2,
-               1, 2, 1 };
-
-    __declspec(dllexport) int accessPixel(std::vector<unsigned char>& result, int col, int row, int k, int width, int height)
+    // Metoda filtrująca każdy piksel obrazka 
+    int modifyPixel(std::vector<unsigned char>& result, int col, int row, int k, int width, int height)
     {
         int sum = 0;
-        int sumKernel = 0;
+        int sumMask = 0;
 
         for (int j = -1; j <= 1; j++)
         {
@@ -65,16 +48,18 @@ extern "C" {          // we need to export the C interface
                 if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
                 {
                     int color = result[(row + j) * 3 * width + (col + i) * 3 + k];
-                    sum += color * kernel[i + 1][j + 1];
-                    sumKernel += kernel[i + 1][j + 1];
+                    sum += color * mask[i + 1][j + 1];
+                    sumMask += mask[i + 1][j + 1];
                 }
             }
         }
 
-        return sum / sumKernel;
+        return sum / sumMask;
     }
 
-    __declspec(dllexport) void guassian_blur2D(std::vector<unsigned char>& result, int width, int startHeight, int endHeight)
+
+    // Funkcja odpowiedzialna za filtrację obrazka metodą Gaussa
+    __declspec(dllexport) void blurGauss(std::vector<unsigned char>& result, int width, int startHeight, int endHeight)
     {
         for (int row = startHeight; row < endHeight; row++)
         {
@@ -83,7 +68,7 @@ extern "C" {          // we need to export the C interface
                 //Brany każdy piksel
                 for (int k = 0; k < 3; k++)
                 {
-                    result[3 * row * width + 3 * col + k] = accessPixel(result, col, row, k, width, endHeight);
+                    result[3 * row * width + 3 * col + k] = modifyPixel(result, col, row, k, width, endHeight);
                 }
             }
         }
