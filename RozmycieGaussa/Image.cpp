@@ -20,10 +20,10 @@ void Image::filter(std::vector<unsigned char>& result, int width, int startHeigh
 
 }
 
-std::vector<unsigned char> Image::getVectorForColors()
-{
-	return vectorForColors;
-}
+//std::vector<unsigned char> Image::getVectorForColors()
+//{
+//	return vectorForColors;
+//}
 
 Image::~Image()
 {
@@ -56,13 +56,11 @@ void Image::read()
 	widthOfImg = informationHeader[4] + (informationHeader[5] << 8) + (informationHeader[6] << 16) + (informationHeader[7] << 24);
 	heightOfImg = informationHeader[8] + (informationHeader[9] << 8) + (informationHeader[10] << 16) + (informationHeader[11] << 24);
 
-	//OD TAD
-	
 	const int paddingAmount = ((4 - (widthOfImg * 3) % 4) % 4);
-
-	//do tablicy charow
-
-	vectorForColors.resize(widthOfImg * heightOfImg * 3);
+	
+	int sizeOfPixelsArray = widthOfImg * heightOfImg * 3;
+	colorsBeforeFilter = new unsigned char[sizeOfPixelsArray];
+	colorsAfterFilter = new unsigned char[sizeOfPixelsArray];
 
 	int indeks = 0;
 	for (int y = 0; y < heightOfImg; y++)
@@ -72,17 +70,16 @@ void Image::read()
 		{
 			unsigned char color[3];
 			f.read(reinterpret_cast<char*>(color), 3);
-			vectorForColors[indeks] = color[0]; 
+			colorsBeforeFilter[indeks] = color[0];
 			indeks++;
-			vectorForColors[indeks] = color[1]; 
+			colorsBeforeFilter[indeks] = color[1];
 			indeks++;
-			vectorForColors[indeks] = color[2]; 
+			colorsBeforeFilter[indeks] = color[2];
 			indeks++;
 
 		}
 		f.ignore(paddingAmount);
 	}
-	//DO TAD
 
 	f.close();
 }
@@ -167,11 +164,11 @@ void Image::save()
 	{
 		for (int x = 0; x < widthOfImg; x++)
 		{
-			unsigned char b = vectorForColors[indeks]; //b
+			unsigned char b = colorsAfterFilter[indeks]; 
 			indeks++;
-			unsigned char g = vectorForColors[indeks]; //g
+			unsigned char g = colorsAfterFilter[indeks]; 
 			indeks++;
-			unsigned char r = vectorForColors[indeks]; //r
+			unsigned char r = colorsAfterFilter[indeks]; 
 			indeks++;
 
 			unsigned char color[] = { b, g, r };

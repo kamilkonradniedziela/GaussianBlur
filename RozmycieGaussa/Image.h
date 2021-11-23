@@ -18,7 +18,8 @@ private:
 public:
     int widthOfImg;
     int heightOfImg;
-    std::vector<unsigned char> vectorForColors;
+    unsigned char* colorsBeforeFilter;
+    unsigned char* colorsAfterFilter;
 
     Image();
     ~Image();
@@ -36,5 +37,5 @@ public:
     {
         return heightOfImg; 
     }
-    std::vector<unsigned char> getVectorForColors();
+    //std::vector<unsigned char> getVectorForColors();
 };

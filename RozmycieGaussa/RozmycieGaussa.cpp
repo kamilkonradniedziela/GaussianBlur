@@ -42,7 +42,7 @@ HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBox
 HINSTANCE hInst;                                // bieżące wystąpienie
 WCHAR szTitle[MAX_LOADSTRING];                  // Tekst paska tytułu
 WCHAR szWindowClass[MAX_LOADSTRING];            // nazwa klasy okna głównego
-typedef HRESULT(CALLBACK* LPFNDLLFUNC)(std::vector<unsigned char>& v, UINT, UINT, UINT); // DLL function handler
+typedef HRESULT(CALLBACK* LPFNDLLFUNC)(unsigned char* colorsBeforeFilter, unsigned char* colorsAfterFilter, UINT, UINT, UINT); // DLL function handler
 
 // Przekaż dalej deklaracje funkcji dołączone w tym module kodu:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -77,20 +77,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
 
-    /************************************************************************************************/
- // Call the MyProc1 assembler procedure from the JALib.dll library in static mode
-    int x = 3, y = 4, z = 0, k = 0, e = 0;
-    HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
-    LPFNDLLFUNC lpfnDllFunc1; // Function pointer
+ //   /************************************************************************************************/
+ //// Call the MyProc1 assembler procedure from the JALib.dll library in static mode
+ //   int x = 3, y = 4, z = 0, k = 0, e = 0;
+ //   HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
+ //   LPFNDLLFUNC lpfnDllFunc1; // Function pointer
 
-    x = 3, y = 4, z = 0, k = 6, e = 10;
-    if (NULL != hDLL) {
-        lpfnDllFunc1 = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
-        if (NULL != lpfnDllFunc1) {
-            z = lpfnDllFunc1(img.vectorForColors, y, k, e); // Call MyProc1 from the JALib.dll library dynamically
-        }
-    }
-    /***********************************************************************************************/
+ //   x = 3, y = 4, z = 0, k = 6, e = 10;
+ //   if (NULL != hDLL) {
+ //       lpfnDllFunc1 = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
+ //       if (NULL != lpfnDllFunc1) {
+ //           z = lpfnDllFunc1(img.vectorForColors, y, k, e); // Call MyProc1 from the JALib.dll library dynamically
+ //       }
+ //   }
+ //   /***********************************************************************************************/
 
  //       /************************************************************************************************/
  //// Call the multiply cpp function
@@ -272,7 +272,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
                             if (NULL != lpfnDllFunc) 
                             {
-                                z = lpfnDllFunc(img.vectorForColors, img.widthOfImg, 1, 1); // Call MyProc1 from the JALib.dll library dynamically
+                                //z = lpfnDllFunc(img.vectorForColors, img.widthOfImg, 1, 1); // Call MyProc1 from the JALib.dll library dynamically
                             }
                         }
                     }
@@ -325,13 +325,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         //Jeżeli nie ma reszty wierszy przydzielaj po równo do każdego wątku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
                         if (restOfRows != 0)
                         {
-                            threads[i] = std::thread(lpfnDllFunc, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
+                            threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
                             restOfRows--;
                             actualRow += rowsForThread + 1;
                         }
                         else
                         {
-                            threads[i] = std::thread(lpfnDllFunc, std::ref(img.vectorForColors), img.widthOfImg, actualRow, actualRow + rowsForThread);
+                            threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread);
                             actualRow += rowsForThread;
                         }
                     }

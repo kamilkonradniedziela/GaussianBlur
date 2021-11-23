@@ -1,40 +1,33 @@
-.data
-sum qword 0
-sumMask qword 0
-row qword 0
-col qword 0
+;ecx - colorsBeforeFilter
+;edx - colorsAfterFilter
+;r8d - width
+;r9d - startHeight
+;r10d - endHeight
+
+
+public MyProc1
 
 .code
 MyProc1 proc
-	
-	mov row, R8
+mov r10d,DWORD PTR[rsp+40] ; r10d = endHeight
 
-	loopOverRows:
-	cmp row, R9
-	je filteringDone
-;	jae loopOverColumns
-;	jmp loopOverRows
-		
-		loopOverColumns:
-		cmp col, RDX
-		je loopOverColumnsDone
-		inc col
-		jmp loopOverColumns
+mov r11d, 0		;start width to loop
+loopOverRows:
+cmp r9d, r10d
+je filteringDone
 	
-	loopOverColumnsDone:
-	inc row
-	jmp loopOverRows
+	loopOverColumns:
+	cmp r11d, r8d	
+	je loopOverColumnsDone
+	inc r11d
+	jmp loopOverColumns
+
+loopOverColumnsDone:
+inc r9d
+jmp loopOverRows
 
 filteringDone:
-mov RAX, RDX
+
 ret
 MyProc1 endp
 end
-
-
-
-
-;add RCX, RDX
-;add RCX, R8
-;add RCX, R9
-;mov RAX, RCX

@@ -35,7 +35,7 @@ extern "C" {          // we need to export the C interface
                          1, 2, 1 };
 
     // Metoda filtrująca każdy piksel obrazka 
-    int modifyPixel(std::vector<unsigned char>& result, int col, int row, int k, int width, int height)
+    int modifyPixel(unsigned char* colorsBeforeFilter, int col, int row, int k, int width, int height)
     {
         int sum = 0;
         int sumMask = 0;
@@ -47,7 +47,7 @@ extern "C" {          // we need to export the C interface
                 //Jeśli jestem w obszarze obrazka
                 if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
                 {
-                    int color = result[(row + j) * 3 * width + (col + i) * 3 + k];
+                    int color = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + k];
                     sum += color * mask[i + 1][j + 1];
                     sumMask += mask[i + 1][j + 1];
                 }
@@ -59,16 +59,16 @@ extern "C" {          // we need to export the C interface
 
 
     // Funkcja odpowiedzialna za filtrację obrazka metodą Gaussa
-    __declspec(dllexport) void blurGauss(std::vector<unsigned char>& result, int width, int startHeight, int endHeight)
+    __declspec(dllexport) void blurGauss(unsigned char* colorsBeforeFilter, unsigned char* colorsAfterFilter, int width, int startHeight, int endHeight)
     {
         for (int row = startHeight; row < endHeight; row++)
         {
             for (int col = 0; col < width; col++)
             {
-                //Brany każdy piksel
+                //Brany każdy piksel przez maske
                 for (int k = 0; k < 3; k++)
                 {
-                    result[3 * row * width + 3 * col + k] = modifyPixel(result, col, row, k, width, endHeight);
+                    colorsAfterFilter[3 * row * width + 3 * col + k] = modifyPixel(colorsBeforeFilter, col, row, k, width, endHeight);
                 }
             }
         }
