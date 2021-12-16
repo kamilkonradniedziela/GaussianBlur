@@ -256,6 +256,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                            if (NULL != hDLL) 
                            {
                                lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
+                               int z = 0;                   //
+                               lpfnDllFunc(img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, 0, img.heightOfImg); // Call MyProc1 from the JALib.dll library dynamically    //
                                if (lpfnDllFunc == NULL) 
                                {
                                    MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
@@ -272,7 +274,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
                             if (NULL != lpfnDllFunc) 
                             {
-                                //z = lpfnDllFunc(img.vectorForColors, img.widthOfImg, 1, 1); // Call MyProc1 from the JALib.dll library dynamically
+                                lpfnDllFunc(img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, 0, img.heightOfImg); // Call MyProc1 from the JALib.dll library dynamically
                             }
                         }
                     }
@@ -320,25 +322,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     std::vector<std::thread> threads(threadsNumber);
                     int actualRow = 0;  
                     auto start = std::chrono::high_resolution_clock::now();
-                    for (int i = 0; i < threadsNumber; i++)
-                    {
-                        //Jeżeli nie ma reszty wierszy przydzielaj po równo do każdego wątku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
-                        if (restOfRows != 0)
-                        {
-                            threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
-                            restOfRows--;
-                            actualRow += rowsForThread + 1;
-                        }
-                        else
-                        {
-                            threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread);
-                            actualRow += rowsForThread;
-                        }
-                    }
-                    for (int i = 0; i < threadsNumber; i++)
-                    {
-                        threads[i].join();
-                    }
+                    //for (int i = 0; i < threadsNumber; i++)
+                    //{
+                    //    //Jeżeli nie ma reszty wierszy przydzielaj po równo do każdego wątku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
+                    //    if (restOfRows != 0)
+                    //    {
+                    //        threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
+                    //        restOfRows--;
+                    //        actualRow += rowsForThread + 1;
+                    //    }
+                    //    else
+                    //    {
+                    //        threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread);
+                    //        actualRow += rowsForThread;
+                    //    }
+                    //}
+                    //for (int i = 0; i < threadsNumber; i++)
+                    //{
+                    //    threads[i].join();
+                    //}
                     auto end = std::chrono::high_resolution_clock::now();
                     std::chrono::duration<float>duration = end - start;
                     float timeDifference = duration.count();

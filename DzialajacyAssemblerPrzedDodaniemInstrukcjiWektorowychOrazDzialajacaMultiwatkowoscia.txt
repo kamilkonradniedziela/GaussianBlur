@@ -10,7 +10,7 @@ public MyProc1
 sum dword 0
 sumMask dword ?
 maskRowIndex sdword 0
-maskRowIndexTemporary sdword 0 ;Zmienna stworzona poniewaø program wpada≥ w nieskonczona pelte
+maskRowIndexTemporary sdword 0 ;Zmienna stworzona poniewa≈º program wpada≈Ç w nieskonczona pelte
 maskColumnIndex sdword 0
 
 firstColumnLoopVariable dword 0
@@ -55,7 +55,7 @@ je filteringDone
 	je loopOverColumnsDone
 
 		mov bluringLoopVariable, 0;mov r12d, 0
-		loopWhichBlursPixels:				;Brany kaødy piksel przez maske				for (int k = 0; k < 3; k++)
+		loopWhichBlursPixels:				;Brany ka≈ºdy piksel przez maske				for (int k = 0; k < 3; k++)
 		cmp bluringLoopVariable, 3
 		je loopWhichBlursPixelsDone
 
@@ -76,7 +76,7 @@ je filteringDone
 				;movd xmm0, r10d
 				;PCMPEQD xmm9, xmm0
 
-				;Sprawdzenie poprawnoúci ifa											;if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
+				;Sprawdzenie poprawno≈õci ifa											;if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
 				mov r11d, r9d															;row = r9d
 				add r11d, maskRowIndex
 				mov r12d, firstColumnLoopVariable															;col = r8d
@@ -90,25 +90,25 @@ je filteringDone
 				cmp r12d, r8d
 				jge isFalse
 				 
-				;Jeøeli if jest spe≥niony
+				;Je≈ºeli if jest spe≈Çniony
 				;Lewa strona wyrazenia w tabblicy colorsBeforeFilter
-				mov raxBufor, rax;				; Robie bufor z raxBufor na trzymanie eax, øeby wrÛciÊ potem do poprzedniej wartoúci
+				mov raxBufor, rax;				; Robie bufor z raxBufor na trzymanie eax, ≈ºeby wr√≥ciƒá potem do poprzedniej warto≈õci
 				mov eax, r11d					; (row + j) -> eax
 				mov r11d, 3						; Wpisuje 3 do rejestru r11d
 				mul r11d						; (row + j) * 3 -> eax
 				mul r8d							; (row +j) * 3 * width -> eax
 				mov r11d, eax					; Wpisuje wynik lewe strona wyrazenia w tablicy colorsBeforeFilter do rejestru r11d
-				mov rax, raxBufor				; wracam eax do poprzedniej wartoúci
-				;r11d juz zajÍte !!!
+				mov rax, raxBufor				; wracam eax do poprzedniej warto≈õci
+				;r11d juz zajƒôte !!!
 
 				;Prawa strona wyrazenia w tablicy colorsBeforeFilter
-				mov raxBufor, rax;				; Robie bufor z raxBufor na trzymanie eax, øeby wrÛciÊ potem do poprzedniej wartoúci
+				mov raxBufor, rax;				; Robie bufor z raxBufor na trzymanie eax, ≈ºeby wr√≥ciƒá potem do poprzedniej warto≈õci
 				mov eax, r12d					; (column + i) -> eax
 				mov r12d, 3						; Wpisuje 3 do rejestru r12d
 				mul r12d						; (column + i) * 3 -> eax
 				mov r12d, eax					; Wpisuje wynik prawa strona wyrazenia w tablicy colorsBeforeFilter do rejestru r12d
-				mov rax, raxBufor				; wracam eax do poprzedniej wartoúci
-				;r12d juz zajÍte !!!				
+				mov rax, raxBufor				; wracam eax do poprzedniej warto≈õci
+				;r12d juz zajƒôte !!!				
 
 				add r11d, r12d					; (row + j) * 3 * width + (column + i) * 3 -> r11d
 				add r11d, bluringLoopVariable	; (row + j) * 3 * width + (column + i) * 3 * k -> r11d
@@ -125,24 +125,24 @@ je filteringDone
 				;mov eax, maskRowIndex			;
 				mul arrayRowSize				;
 				add r12, rax					; Przypisuje jak w internecie
-				mov esi, maskColumnIndex		; -------------> sposÛb na tablice z neta(mask[i + 1][j + 1])							WCZESNIEJ BYLO:   [r12d + esi]
+				mov esi, maskColumnIndex		; -------------> spos√≥b na tablice z neta(mask[i + 1][j + 1])							WCZESNIEJ BYLO:   [r12d + esi]
 				add esi, 1						;
 				mov al, [r12 + rsi]				; mask[i + 1][j + 1] -> al
 				mov r14, rax					; mask[i + 1][j + 1] -> r14 (Wykorzystuje r13 jako bufor)	r14?
 				mul r13b						; mask[i + 1][j + 1] * colour -> al
 				add r11d, eax					; sum += colour * mask[i + 1][j + 1]						R11 = SUM !!!!!
-				mov sum, r11d					; (to co wyøej) -> sum
+				mov sum, r11d					; (to co wy≈ºej) -> sum
 				mov r11d, sumMask				; r11d = sumMask
 				mov r12d, r11d					; r12d = sumMask
 				add r11d, r12d					; sumMask +=
 				mov eax, r11d					; sumMask += -> eax
 				add rax, r14					; sumMask += mask[i + 1][j + 1] -> rax
-				mov sumMask, eax				; (to co wyøej) -> sumMask
+				mov sumMask, eax				; (to co wy≈ºej) -> sumMask
 
 				inc maskColumnIndex
 				jmp loopOverMaskColumns
 
-				;Jeøeli if nie jest spe≥niony
+				;Je≈ºeli if nie jest spe≈Çniony
 				isFalse:
 				inc maskColumnIndex
 				jmp loopOverMaskColumns
@@ -170,7 +170,7 @@ je filteringDone
 		mov rdx, colorsAfterFilterHolder		; Wracam wartosc rejestru rdx wyzerowanego przez nule
 		mov byte ptr[rdx + r11], r15b;r15b 
 		;movd xmm0, r10d ;* r9d * r8d + 3 * r11d + r12d	;r13d index tablicy
-		;mov byte ptr[rdx + 0], r10b				;edx to moja tablic, r14d bedzie nowπ tablicπ  
+		;mov byte ptr[rdx + 0], r10b				;edx to moja tablic, r14d bedzie nowƒÖ tablicƒÖ  
 		;mov r14b, byte ptr[rdx + 0]
 
 		inc bluringLoopVariable
