@@ -1,0 +1,228 @@
+;ecx - colorsBeforeFilter
+;edx - colorsAfterFilter
+;r8d - width
+;r9d - startHeight
+;r10d - endHeight
+
+
+public MyProc1
+.data
+;TE DANE MOGA BYC GLOBALNE:
+maskArray byte 1, 2, 1, 
+			   2, 4, 2,
+			   1, 2, 1
+arrayRowSize qword 3
+three dword 3
+zero dword 0
+one dword 1
+two dword 2
+minusOne dword -1
+
+
+;TE DANE NIE MOGA BYC GLOBALNE:
+raxBufor qword 0
+divisionResult byte 0
+
+
+;NIE WIEM CZY TE DANE MOGA BYC GLOBALNE ALBO NIEGLOBALNE:
+colorsAfterFilterHolder qword 0
+
+.code
+MyProc1 proc
+mov r10d,DWORD PTR[rsp+40] ; r10d = endHeight
+push rbx
+push rsi
+push rdi
+push rbp
+push r12
+push r13
+push r14
+push r15
+mov colorsAfterFilterHolder, rdx
+;mov r15b, maskArray + 2*3
+;mov r10, OFFSET maskArray
+;add r10, 3							POMOCNICZE
+;mov rsi, columnIndex
+;mov al, [r10 + rsi]
+;movd xmm0, 1
+loopOverRows:									;for (int row = startHeight; row < endHeight; row++)							poczatek petli po wierszach				
+cmp r9d, r10d									;Sprawdz czy row < endHeight 
+je filteringDone								;Jeżeli warunek pętli loopOverRows nie jest spełniony wyjdź z niej
+	
+	movd xmm0, zero								;Początkowo inicjalizuje rejestr xmm0 wartością zero, następnie xmm0 = col
+	movd xmm1, r8d								;Inicjalizuje rejestr xmm1 wartością r8d, xmm1 = width 
+	loopOverColumns:							;for (int col = 0; col < width; col++)											poczatek wierszy po kolumnach
+	comisd xmm0, xmm1							;Sprawdź czy col < width
+	je loopOverColumnsDone						;Jeżeli warunek pętli loopOverColumns nie jest spełniony wyjdź z niej
+
+		movd xmm2, zero							;Inicjalizuje rejestr xmm2 wartością zero
+		movd xmm3, three						;Inicjalizuje rejestr xmm2 wartością trzy
+		loopWhichBlursPixels:					;for (int k = 0; k < 3; k++)													Brany każdy piksel przez maske	
+		comisd xmm2, xmm3						;Sprawdź czy k < 3
+		je loopWhichBlursPixelsDone				;Jeżeli warunek pętli loopWhichBlursPixels nie jest spełniony wyjdź z niej
+
+		movd xmm5, zero							;Wpisuję do rejestru xmm5(sum) wartość zero
+		movd xmm6, zero							;Wpisuję do rejestru xmm6(sumMask) wartość zero
+		movd xmm7, minusOne						;Wpisuję do rejestru xmm7(maskRowIndex) wartość -1
+		movd xmm9, minusOne						;Wartość pomocnicza dla ujemnych wartości rejestrów
+		movd xmm10, minusOne						;Wpisuję do rejestru xmm10(maskRowIndex) wartość -1
+			
+			movd xmm8, two						;Inicjalizuje rejestr xmm8 wartością dwa
+			loopOverMaskRows:					;for (int j = -1; j <= 1; j++)
+			comisd xmm7, xmm8					;Sprawdź czy j < 2
+			je loopOverMaskRowsDone				;Jeżeli warunek pętli loopOverMaskRows nie jest spełniony wyjdź z niej
+				
+				movd xmm10, minusOne			;Trzbea wyzerowac rejestr petli wewnetrznej
+				loopOverMaskColumns:			;for (int i = -1; i <= 1; i++)
+				comisd xmm10, xmm8
+				je loopOverMaskColumnsDone
+				;movd xmm9, r10d
+				;movd xmm0, r10d
+				;PCMPEQD xmm9, xmm0
+
+				;Sprawdzenie poprawności ifa											;if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
+				mov r11d, r9d															;row = r9d
+				movd xmm4, r11;;
+				addsd xmm4, xmm7;;
+				movd r11, xmm4;;
+				movd r12, xmm0															;col = r8d
+				movd xmm4, r12;;
+				addsd xmm4, xmm10
+				movd r12, xmm4
+				cmp r11d, 0
+				jl isFalse
+				cmp r11d, r10d
+				jge isFalse
+				cmp r12d, 0
+				jl isFalse
+				cmp r12d, r8d
+				jge isFalse
+				 
+				;Jeżeli if jest spełniony
+				;Lewa strona wyrazenia w tabblicy colorsBeforeFilter
+				movd xmm11, rax;				; Robie bufor z raxBufor na trzymanie eax, żeby wrócić potem do poprzedniej wartości
+				mov eax, r11d					; (row + j) -> eax
+				mov r11d, 3						; Wpisuje 3 do rejestru r11d
+				mul r11d						; (row + j) * 3 -> eax
+				mul r8d							; (row +j) * 3 * width -> eax
+				mov r11d, eax					; Wpisuje wynik lewe strona wyrazenia w tablicy colorsBeforeFilter do rejestru r11d
+				movd rax, xmm11				; wracam eax do poprzedniej wartości
+				;r11d juz zajęte !!!
+
+				;Prawa strona wyrazenia w tablicy colorsBeforeFilter
+				movd xmm11, rax;				; Robie bufor z raxBufor na trzymanie eax, żeby wrócić potem do poprzedniej wartości
+				mov eax, r12d					; (column + i) -> eax
+				mov r12d, 3						; Wpisuje 3 do rejestru r12d
+				mul r12d						; (column + i) * 3 -> eax
+				mov r12d, eax					; Wpisuje wynik prawa strona wyrazenia w tablicy colorsBeforeFilter do rejestru r12d
+				movd rax, xmm11				; wracam eax do poprzedniej wartości
+				;r12d juz zajęte !!!				
+
+				add r11d, r12d					; (row + j) * 3 * width + (column + i) * 3 -> r11d
+				movd xmm4, r11
+				addsd xmm4, xmm2	; (row + j) * 3 * width + (column + i) * 3 * k -> r11d
+				movd r11, xmm4
+				mov r13b, byte ptr[rcx+r11]		; Zmienna r13b to colour, przypisuje do niej wynik z tablicy colorsBeforeFilter                WCZESNIEJ BYLO: ecx+r11d    
+
+				movd r11d, xmm5					; r11d = sum
+				mov r12d, r11d					; r12d = sum
+				add r11d, r12d					; sum += 
+				mov r12, OFFSET maskArray		;
+				movd r15, xmm7;;
+				add r15d, 1;;
+				mov eax, r15d					;;
+				mul arrayRowSize				;
+				add r12, rax					; Przypisuje jak w internecie
+				movd esi, xmm10		; -------------> sposób na tablice z neta(mask[i + 1][j + 1])							WCZESNIEJ BYLO:   [r12d + esi]
+				add esi, 1						;
+				mov al, [r12 + rsi]				; mask[i + 1][j + 1] -> al
+				mov r14, rax					; mask[i + 1][j + 1] -> r14 (Wykorzystuje r13 jako bufor)	r14?
+				mul r13b						; mask[i + 1][j + 1] * colour -> al
+				add r11d, eax					; sum += colour * mask[i + 1][j + 1]						R11 = SUM !!!!!
+				movd xmm5, r11d					; (to co wyżej) -> sum
+				movd r11d, xmm6				; r11d = sumMask
+				mov r12d, r11d					; r12d = sumMask
+				add r11d, r12d					; sumMask +=
+				mov eax, r11d					; sumMask += -> eax
+				add rax, r14					; sumMask += mask[i + 1][j + 1] -> rax
+				movd xmm6, eax				; (to co wyżej) -> sumMask
+
+				comisd xmm10, xmm9
+				je xmm10RegisterIsMinus
+				addss xmm10, one
+				jmp loopOverMaskColumns
+
+
+				;Jeżeli if nie jest spełniony
+				isFalse:
+				comisd xmm10, xmm9
+				je xmm10RegisterIsMinus
+				addss xmm10, one
+				jmp loopOverMaskColumns
+				
+				xmm10RegisterIsMinus:
+				movd xmm10, zero
+				jmp loopOverMaskColumns
+
+			loopOverMaskColumnsDone:	
+			comisd xmm7, xmm9
+			je registerIsMinus
+			addss xmm7, one
+			jmp loopOverMaskRows
+			
+			registerIsMinus:
+			movd xmm7, zero
+			jmp loopOverMaskRows
+
+		loopOverMaskRowsDone:
+		;tutaj return sum/sumMask i trzeba to przypisac
+		movd eax, xmm5							; sum -> eax
+		movd xmm4, r11							; robie bufor na r11
+		movd r11d, xmm6;
+		div r11d;
+		movd r11d, xmm4;						; Koniec bufora
+		;divss xmm5, xmm6								; sum / sumMask -> eax
+		;movd eax, xmm5
+		movd xmm12, rax					; sum / sumMask -> divisionResult
+		mov eax, r9d							; startHeight -> eax
+		mul three								; 3 * startHeight -> eax
+		mul r8d									; 3 * startHeight * width -> eax
+		mov r11d, eax							; 3 * startHeight * width -> r11d
+		movd eax, xmm0		; col -> eax
+		mul three								; col * 3 -> eax
+		mov r12d, eax							; col * 3 -> r12d
+		add r11d, r12d							; 3 * startHeight * width + col * 3 -> r11d
+		movd xmm4, r11
+		addsd xmm4, xmm2			; 3 * startHeight * width + col * 3 + k-> r11d
+		movd r11, xmm4
+		movd r15, xmm12
+		mov r14b, 1
+		mov rdx, colorsAfterFilterHolder		; Wracam wartosc rejestru rdx wyzerowanego przez nule
+		mov byte ptr[rdx + r11], r15b;r15b 
+		;movd xmm0, r10d ;* r9d * r8d + 3 * r11d + r12d	;r13d index tablicy
+		;mov byte ptr[rdx + 0], r10b				;edx to moja tablic, r14d bedzie nową tablicą  
+		;mov r14b, byte ptr[rdx + 0]
+
+		addss xmm2, one
+		jmp loopWhichBlursPixels
+
+	loopWhichBlursPixelsDone:
+	addss xmm0, one
+	jmp loopOverColumns
+
+loopOverColumnsDone:
+inc r9d
+jmp loopOverRows
+
+filteringDone:
+pop r15
+pop r14
+pop r13
+pop r12
+pop rbp
+pop rdi
+pop rsi
+pop rbx
+ret
+MyProc1 endp
+end

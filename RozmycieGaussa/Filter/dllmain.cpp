@@ -48,10 +48,7 @@ extern "C" {          // we need to export the C interface
                 if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
                 {
                     int color = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + k];
-                    int debug1 = (row + j) * 3 * width + (col + i) * 3 + k;
                     sum += color * mask[i + 1][j + 1];
-                    int debug2 = mask[i + 1][j + 1];
-                    int debug3 = sum;
                     sumMask += mask[i + 1][j + 1];
                 }
             }
@@ -68,7 +65,7 @@ extern "C" {          // we need to export the C interface
         {
             for (int col = 0; col < width; col++)
             {
-                //Brany każdy piksel przez maske
+                //Brany każdy piksel przez maske, rgb
                 for (int k = 0; k < 3; k++)
                 {
                     colorsAfterFilter[3 * row * width + 3 * col + k] = modifyPixel(colorsBeforeFilter, col, row, k, width, endHeight);

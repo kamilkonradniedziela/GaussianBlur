@@ -10,6 +10,8 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <CommCtrl.h>
+#pragma comment (lib, "comctl32")
 
 
 #define MAX_LOADSTRING 100
@@ -37,6 +39,7 @@ using namespace std::literals::chrono_literals;
 Image img;
 
 HWND loadImageButton, filterImageButton, frameForLibraryOptions, chBoxAsm, chBoxCpp, frameForThreadNumber, threads1, threads2, threads4, threads8, threads16, threads32, threads64;
+HWND hProgressBar;
 
 // Zmienne globalne:
 HINSTANCE hInst;                                // bieżące wystąpienie
@@ -172,7 +175,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Przechowuj dojście wystąpienia w naszej zmiennej globalnej
 
-
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
@@ -215,6 +217,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    threads64 = CreateWindowEx(0, L"BUTTON", L"64", WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON,
        950, 150, 40, 10, hWnd, (HMENU)ID_PRZYCISK9, hInstance, NULL);
 
+
+   //Progress Bar
+   INITCOMMONCONTROLSEX icc;
+   icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
+   icc.dwICC = ICC_BAR_CLASSES; // toolbary, statusbary, tooltipy i oczywiście progressbary
+   InitCommonControlsEx(&icc);
+   hProgressBar = CreateWindowEx(0, PROGRESS_CLASS, NULL, WS_CHILD | WS_VISIBLE | PBS_SMOOTH,
+       50, 230, 300, 30, hWnd, (HMENU)200, hInstance, NULL);
+
    if (!hWnd)
    {
       return FALSE;
@@ -253,16 +264,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     {
                         MessageBox(hWnd, L"Wybrales biblioteke C++", L"Test", MB_ICONINFORMATION);
                         HINSTANCE hDLL = LoadLibrary(L"Filter"); // Load JALib.dll library dynamically
-                           if (NULL != hDLL) 
-                           {
-                               lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
-                               int z = 0;                   //
-                               lpfnDllFunc(img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, 0, img.heightOfImg); // Call MyProc1 from the JALib.dll library dynamically    //
-                               if (lpfnDllFunc == NULL) 
-                               {
-                                   MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
-                               }
-                           }
+                        if (NULL != hDLL) 
+                        {
+                            lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
+                            if (lpfnDllFunc == NULL) 
+                            {
+                                MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
+                            }
+                        }
                     }
                     else if (IsDlgButtonChecked(hWnd, ID_PRZYCISK2))
                     {
@@ -270,11 +279,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         HINSTANCE hDLL = LoadLibrary(L"FilterASM"); // Load JALib.dll library dynamically
                         if (NULL != hDLL) 
                         {
-                            int z = 0;
                             lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
-                            if (NULL != lpfnDllFunc) 
+                            if (lpfnDllFunc == NULL) 
                             {
-                                lpfnDllFunc(img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, 0, img.heightOfImg); // Call MyProc1 from the JALib.dll library dynamically
+                                MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
                             }
                         }
                     }
@@ -320,34 +328,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     int rowsForThread = numberOfRows / threadsNumber;
                     int restOfRows = numberOfRows % threadsNumber;
                     std::vector<std::thread> threads(threadsNumber);
-                    int actualRow = 0;  
+                    int actualRow = 0;
+                    SendMessage(hProgressBar, PBM_SETRANGE, 0, (LPARAM)MAKELONG(0, threadsNumber));
                     auto start = std::chrono::high_resolution_clock::now();
-                    //for (int i = 0; i < threadsNumber; i++)
-                    //{
-                    //    //Jeżeli nie ma reszty wierszy przydzielaj po równo do każdego wątku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
-                    //    if (restOfRows != 0)
-                    //    {
-                    //        threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
-                    //        restOfRows--;
-                    //        actualRow += rowsForThread + 1;
-                    //    }
-                    //    else
-                    //    {
-                    //        threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread);
-                    //        actualRow += rowsForThread;
-                    //    }
-                    //}
-                    //for (int i = 0; i < threadsNumber; i++)
-                    //{
-                    //    threads[i].join();
-                    //}
+                    for (int i = 0; i < threadsNumber; i++)
+                    {
+                        //Jeżeli nie ma reszty wierszy przydzielaj po równo do każdego wątku, jezeli jest reszta to dodawaj po wierszu do kazdego watku az reszta sie skonczy
+                        if (restOfRows != 0)
+                        {
+                            threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread + 1);
+                            restOfRows--;
+                            actualRow += rowsForThread + 1;
+                        }
+                        else
+                        {
+                            threads[i] = std::thread(lpfnDllFunc, img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, actualRow, actualRow + rowsForThread);
+                            actualRow += rowsForThread;
+                        }
+                        SendMessage(hProgressBar, PBM_DELTAPOS, (WPARAM)1, 0); // zwiększa wartość o threadsNumber
+                    }
+                    for (int i = 0; i < threadsNumber; i++)
+                    {
+                        threads[i].join();
+                    }
                     auto end = std::chrono::high_resolution_clock::now();
                     std::chrono::duration<float>duration = end - start;
                     float timeDifference = duration.count();
+                    SendMessage(hProgressBar, PBM_SETPOS, (WPARAM)0, 0); // ustawia wartość na 17
                     std::string timeResult = "Czas filtrowania to: " + std::to_string(timeDifference) + " sekund";
                     MessageBoxA(hWnd, timeResult.c_str(), "Komunikat", MB_ICONINFORMATION);
 
                     img.save();
+
 
                     break;
                 }
