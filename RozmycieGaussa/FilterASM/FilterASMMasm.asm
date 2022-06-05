@@ -42,14 +42,15 @@ je filteringDone								;Je¿eli warunek pêtli loopOverRows nie jest spe³niony wy
 	comisd xmm0, xmm1							;SprawdŸ czy col < width
 	je loopOverColumnsDone						;Je¿eli warunek pêtli loopOverColumns nie jest spe³niony wyjdŸ z niej
 
-		movd xmm2, zero							;Inicjalizuje rejestr xmm2 wartoœci¹ zero
-		movd xmm3, three						;Inicjalizuje rejestr xmm2 wartoœci¹ trzy
-		loopWhichBlursPixels:					;for (int k = 0; k < 3; k++)													Brany ka¿dy piksel przez maske	
-		comisd xmm2, xmm3						;SprawdŸ czy k < 3
-		je loopWhichBlursPixelsDone				;Je¿eli warunek pêtli loopWhichBlursPixels nie jest spe³niony wyjdŸ z niej
+		mov r11, 0								;
+		pinsrd xmm5, r11d, 0					;Wpisujê do rejestru xmm5[0](redSum) wartoœæ zero
+		mov r11, 0								;
+		pinsrd xmm5, r11d, 1					;Wpisujê do rejestru xmm5[1](greenSum) wartoœæ zero
+		mov r11, 0								;
+		pinsrd xmm5, r11d, 2					;Wpisujê do rejestru xmm5[2](blueSum) wartoœæ zero
+		pinsrd xmm6, zero, 0					;Wpisujê do rejestru xmm6(sumMask) wartoœæ zero
 
-		movd xmm5, zero							;Wpisujê do rejestru xmm5(sum) wartoœæ zero
-		movd xmm6, zero							;Wpisujê do rejestru xmm6(sumMask) wartoœæ zero
+
 		movd xmm7, minusOne						;Wpisujê do rejestru xmm7(maskRowIndex) wartoœæ -1
 		movd xmm10, minusOne					;Wpisujê do rejestru xmm10(maskRowIndex) wartoœæ -1
 		movd xmm9, minusOne						;Wartoœæ pomocnicza dla ujemnych wartoœci rejestrów
@@ -100,15 +101,13 @@ je filteringDone								;Je¿eli warunek pêtli loopOverRows nie jest spe³niony wy
 				mov r12d, eax					;Wpisuje wynik prawa strona wyrazenia w tablicy colorsBeforeFilter do rejestru r12d
 				movd rax, xmm11					;wracam eax do poprzedniej wartoœci
 
+				;Sk³adowa RED
 				add r11d, r12d					;(row + j) * 3 * width + (column + i) * 3 -> r11d
 				movd xmm4, r11					;Wykorzystanie rejestru xmm4 jako bufor na wartoœæ r11
-				addsd xmm4, xmm2				;(row + j) * 3 * width + (column + i) * 3 + k -> xmm4
-				movd r11, xmm4					;przypisanie do rejestru r11 wartoœci xmm4, (row + j) * 3 * width + (column + i) * 3 + k -> r11
-				mov r13b, byte ptr[rcx+r11]		;Zmienna r13b to colour, przypisuje do niej wynik z tablicy colorsBeforeFilter 
-
-				movd r11d, xmm5					;r11d = sum
-				mov r12d, r11d					;r12d = sum
-				add r11d, r12d					;sum += 
+				addss xmm4, zero				;(row + j) * 3 * width + (column + i) * 3 + 0 -> xmm4
+				movd r11, xmm4					;przypisanie do rejestru r11 wartoœci xmm4, (row + j) * 3 * width + (column + i) * 3 + 0 -> r11
+				mov r13b, byte ptr[rcx+r11]		;Zmienna r13b to redColour, przypisuje do niej wynik z tablicy colorsBeforeFilter 
+				pextrd r11d, xmm5, 0			;r11d = redSum
 				mov r12, OFFSET maskArray		;przypisanie do rejestu r12 adresu pocz¹tku tablicy maskArray, jest to tablica zawieraj¹ca wartoœci maski rozmywaj¹cej
 				movd r15, xmm7					;Przypisanie wartoœci rejestru xmm7 do rejestru r15
 				add r15d, 1						;Dodanie do rejestru r15d wartoœci 1
@@ -119,15 +118,38 @@ je filteringDone								;Je¿eli warunek pêtli loopOverRows nie jest spe³niony wy
 				add esi, 1						;}
 				mov al, [r12 + rsi]				;mask[i + 1][j + 1] -> al
 				mov r14, rax					;mask[i + 1][j + 1] -> r14 (Wykorzystuje r14 jako bufor)
-				mul r13b						;mask[i + 1][j + 1] * colour -> al
-				add r11d, eax					;sum += colour * mask[i + 1][j + 1], bo r11 = SUM !!!!!
-				movd xmm5, r11d					;(to co wy¿ej) -> sum
-				movd r11d, xmm6					;przypisanie wartoœci rejestru xmm6 do rejestru r11d, wiêc r11d = sumMask
+				mul r13b						;mask[i + 1][j + 1] * redColour -> al
+				add r11d, eax					;redSum += colour * mask[i + 1][j + 1], bo r11 = SUM !!!!!
+				pinsrd xmm5, r11d, 0					;(to co wy¿ej) -> xmm5[0](redSum)
+
+				;Sk³adowa GREEN
+				addss xmm4, one					;(row + j) * 3 * width + (column + i) * 3 + 1 -> xmm4
+				movd r11, xmm4					;przypisanie do rejestru r11 wartoœci xmm4, (row + j) * 3 * width + (column + i) * 3 + 1 -> r11
+				mov r13b, byte ptr[rcx+r11]		;Zmienna r13b to greenColour, przypisuje do niej wynik z tablicy colorsBeforeFilter 
+				pextrd r11d, xmm5, 1			;r11d = greenSum
+				mov rax, r14					;mask[i + 1][j + 1] -> rax
+				mul r13b						;mask[i + 1][j + 1] * greenColour -> al
+				add r11d, eax					;greenSum += greenColour * mask[i + 1][j + 1], bo r11 = SUM !!!!!
+				pinsrd xmm5, r11d, 1			;(to co wy¿ej) -> xmm5[1](greenSum)
+
+				;Sk³adowa BLUE
+				addss xmm4, one					;(row + j) * 3 * width + (column + i) * 3 + 2 -> xmm4
+				movd r11, xmm4					;przypisanie do rejestru r11 wartoœci xmm4, (row + j) * 3 * width + (column + i) * 3 + 2 -> r11
+				mov r13b, byte ptr[rcx+r11]		;Zmienna r13b to greenColour, przypisuje do niej wynik z tablicy colorsBeforeFilter 
+				pextrd r11d, xmm5, 2			;r11d = blueSum
+				mov rax, r14					;mask[i + 1][j + 1] -> rax
+				mul r13b						;mask[i + 1][j + 1] * blueColour -> al
+				add r11d, eax					;blueSum += blueColour * mask[i + 1][j + 1], bo r11 = SUM !!!!!
+				pinsrd xmm5, r11d, 2			;(to co wy¿ej) -> xmm5[2](blueSum)
+
+
+				pextrd r11d, xmm6, 0			;przypisanie wartoœci rejestru xmm6 do rejestru r11d, wiêc r11d = sumMask
 				mov r12d, r11d					;przypisanie wartoœci rejestru r11d do rejestru r12d, wiêc r12d = sumMask
-				add r11d, r12d					;sumMask +=
 				mov eax, r11d					;sumMask += -> eax
 				add rax, r14					;sumMask += mask[i + 1][j + 1] -> rax
-				movd xmm6, eax					;(to co wy¿ej) -> sumMask
+				pinsrd xmm6, eax, 0				;xmm6[0] -> sumMask
+				pinsrd xmm6, eax, 1				;xmm6[1] -> sumMask
+				pinsrd xmm6, eax, 2				;xmm6[2] -> sumMask
 
 				comisd xmm10, xmm9				;Porównanie wartoœci rejestrów xmm10 oraz xmm9
 				je xmm10RegisterIsNegative		;Je¿eli xmm10 == xmm9 przeskocz do etykiety xmm10RegisterIsNegative
@@ -156,12 +178,9 @@ je filteringDone								;Je¿eli warunek pêtli loopOverRows nie jest spe³niony wy
 			jmp loopOverMaskRows				;Skocz do etykiety loopOverMaskRows
 
 		loopOverMaskRowsDone:					;Pocz¹tek etykiety loopOverMaskRowsDone
-		movd eax, xmm5							;przypisanie wartoœci rejestru xmm5 do eax, wiêc sum -> eax
-		movd xmm4, r11							;przypisuje wartoœæ r11 do xmm4, robie bufor na r11
-		movd r11d, xmm6							;przypsiuje do rejestru r11d wartoœæ spod rejestru xmm6
-		div r11d								;dzielê rejest eax przez r11d, wiêc sum / sumMask -> eax
-		movd r11d, xmm4;						;Koniec bufora
-		movd xmm12, rax							;sum / sumMask -> divisionResult
+
+		divps xmm5, xmm6						;Instrukcja wektorowa, dziele xmm5[0](redSum), xmm5[1](greenSum), xmm5[2](blueSum) przez sumMask
+		CVTPS2DQ xmm12, xmm5					;Rzutuje wynik dzielenia z floatów na inty i wpisuje wynik do rejestru xmm12
 		mov eax, r9d							;startHeight -> eax
 		mul three								;3 * startHeight -> eax
 		mul r8d									;3 * startHeight * width -> eax
@@ -171,16 +190,24 @@ je filteringDone								;Je¿eli warunek pêtli loopOverRows nie jest spe³niony wy
 		mov r12d, eax							;col * 3 -> r12d
 		add r11d, r12d							;3 * startHeight * width + col * 3 -> r11d
 		movd xmm4, r11							;Przypisanie wartoœci rejestru r11 do xmm4 
-		addsd xmm4, xmm2						;3 * startHeight * width + col * 3 + k-> r11d
+		addss xmm4, zero						;3 * startHeight * width + col * 3 + 0-> r11d
 		movd r11, xmm4							;Przypisanie wartoœci spod rejestru xmm4 do rejestru r11
-		movd r15, xmm12							;Przypisanie wartoœci spod rejestru xmm12 do rejestru r15
+		pextrd r15d, xmm12, 0					;Przypisanie wartoœci spod rejestru xmm5 do rejestru r15
 		mov rdx, colorsAfterFilterHolder		;Wracam wartosc rejestru rdx
 		mov byte ptr[rdx + r11], r15b;r15b		;Wpisuj do tablicy colorsAfterFilter piksele po rozmyciu
 
-		addss xmm2, one							;Wpisz do rejestru xmm2 wartoœæ 1
-		jmp loopWhichBlursPixels				;Skocz do etykiety loopWhichBlursPixels, czyli wróæ do pêtli loopWhichBlursPixels
+		addss xmm4, one							;3 * startHeight * width + col * 3 + 1-> r11d
+		movd r11, xmm4							;Przypisanie wartoœci spod rejestru xmm4 do rejestru r11
+		pextrd r15d, xmm12, 1					;Przypisanie wartoœci spod rejestru xmm12 do rejestru r15
+		mov rdx, colorsAfterFilterHolder		;Wracam wartosc rejestru rdx
+		mov byte ptr[rdx + r11], r15b;r15b		;Wpisuj do tablicy colorsAfterFilter piksele po rozmyciu
 
-	loopWhichBlursPixelsDone:					;Pocz¹tek etykiety loopWhichBlursPixelsDone
+		addss xmm4, one							;3 * startHeight * width + col * 3 + 2-> r11d
+		movd r11, xmm4							;Przypisanie wartoœci spod rejestru xmm4 do rejestru r11
+		pextrd r15d, xmm12, 2					;Przypisanie wartoœci spod rejestru xmm5 do rejestru r15
+		mov rdx, colorsAfterFilterHolder		;Wracam wartosc rejestru rdx
+		mov byte ptr[rdx + r11], r15b;r15b		;Wpisuj do tablicy colorsAfterFilter piksele po rozmyciu
+
 	addss xmm0, one								;Dodaje wartoœæ jeden do rejestru xmm0
 	jmp loopOverColumns							;Skocz do etykiety loopOverColumns, czyli wróæ do pêtli loopOverColumns
 

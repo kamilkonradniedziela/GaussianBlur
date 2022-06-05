@@ -37,24 +37,34 @@ extern "C" {          // we need to export the C interface
     // Metoda filtrująca każdy piksel obrazka 
     int modifyPixel(unsigned char* colorsBeforeFilter, int col, int row, int k, int width, int height)
     {
-        int sum = 0;
-        int sumMask = 0;
+        int redSum = 1, greenSum = 0, blueSum = 0;
+
+        int sumMask = 16;
 
         for (int j = -1; j <= 1; j++)
         {
             for (int i = -1; i <= 1; i++)
             {
                 //Jeśli jestem w obszarze obrazka
-                if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
+                //if ((row + j) >= 0 && (row + j) < height && (col + i) >= 0 && (col + i) < width)
                 {
-                    int color = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + k];
-                    sum += color * mask[i + 1][j + 1];
+                    //red
+                    int redColor = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + 0];
+                    redSum += redColor * mask[i + 1][j + 1];
+
+                    //green
+                    int greenColor = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + 1];
+                    greenSum += greenColor * mask[i + 1][j + 1];
+
+                    //blue
+                    int blueColor = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + 2];
+                    blueSum += blueColor * mask[i + 1][j + 1];
                     sumMask += mask[i + 1][j + 1];
                 }
             }
         }
-
-        return sum / sumMask;
+        return redSum / sumMask;
+        //return sum;
     }
 
 
@@ -65,11 +75,35 @@ extern "C" {          // we need to export the C interface
         {
             for (int col = 0; col < width; col++)
             {
-                //Brany każdy piksel przez maske, rgb
-                for (int k = 0; k < 3; k++)
+                int redSum = 0, greenSum = 0, blueSum = 0;
+                int sumMask = 0;
+
+                for (int j = -1; j <= 1; j++)
                 {
-                    colorsAfterFilter[3 * row * width + 3 * col + k] = modifyPixel(colorsBeforeFilter, col, row, k, width, endHeight);
+                    for (int i = -1; i <= 1; i++)
+                    {
+                        //Jeśli jestem w obszarze obrazka
+                        if ((row + j) >= 0 && (row + j) < endHeight && (col + i) >= 0 && (col + i) < width)
+                        {
+                            //red
+                            int redColor = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + 0];
+                            redSum += redColor * mask[i + 1][j + 1];
+
+                            //green
+                            int greenColor = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + 1];
+                            greenSum += greenColor * mask[i + 1][j + 1];
+
+                            //blue
+                            int blueColor = colorsBeforeFilter[(row + j) * 3 * width + (col + i) * 3 + 2];
+                            blueSum += blueColor * mask[i + 1][j + 1];
+                            sumMask += mask[i + 1][j + 1];
+                        }
+                    }
                 }
+
+                colorsAfterFilter[3 * row * width + 3 * col + 0] = redSum / sumMask;
+                colorsAfterFilter[3 * row * width + 3 * col + 1] = greenSum / sumMask;         //Tutaj dzielenie wektorowe
+                colorsAfterFilter[3 * row * width + 3 * col + 2] = blueSum / sumMask;
             }
         }
     }

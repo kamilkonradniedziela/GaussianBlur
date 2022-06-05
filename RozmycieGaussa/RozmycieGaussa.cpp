@@ -267,6 +267,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if (NULL != hDLL) 
                         {
                             lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "blurGauss");
+                            //lpfnDllFunc(img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, 0, img.heightOfImg); //////////////////////////////////////////////////DO WYWALENIA
                             if (lpfnDllFunc == NULL) 
                             {
                                 MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
@@ -280,6 +281,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if (NULL != hDLL) 
                         {
                             lpfnDllFunc = (LPFNDLLFUNC)GetProcAddress(hDLL, "MyProc1");
+                            //lpfnDllFunc(img.colorsBeforeFilter, img.colorsAfterFilter, img.widthOfImg, 0, img.heightOfImg); //////////////////////////////////////////////////DO WYWALENIA
                             if (lpfnDllFunc == NULL) 
                             {
                                 MessageBox(hWnd, L"Nie udało się wczytać biblioteki filtrującej", L"komunikat", MB_ICONINFORMATION);
@@ -354,12 +356,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     auto end = std::chrono::high_resolution_clock::now();
                     std::chrono::duration<float>duration = end - start;
                     float timeDifference = duration.count();
-                    SendMessage(hProgressBar, PBM_SETPOS, (WPARAM)0, 0); // ustawia wartość na 17
                     std::string timeResult = "Czas filtrowania to: " + std::to_string(timeDifference) + " sekund";
                     MessageBoxA(hWnd, timeResult.c_str(), "Komunikat", MB_ICONINFORMATION);
-
+                    SendMessage(hProgressBar, PBM_SETPOS, (WPARAM)0, 0); // ustawia wartość na 17
+                    
+                    std::string filename("filteringTimes.txt");
+                    std::ofstream file_out;
+                    file_out.open(filename, std::ios_base::app);
+                    file_out << timeDifference << std::endl;
                     img.save();
-
 
                     break;
                 }
